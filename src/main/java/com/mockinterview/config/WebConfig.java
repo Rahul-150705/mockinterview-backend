@@ -16,7 +16,7 @@
 //             @Override
 //             public void addCorsMappings(CorsRegistry registry) {
 //                 registry.addMapping("/**")
-//                         .allowedOriginPatterns("http://localhost:8080") // React frontend
+//                         .allowedOriginPatterns("http://localhost:3000") // React frontend
 //                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
 //                         .allowedHeaders("*")
 //                         .allowCredentials(true);

@@ -1,5 +1,6 @@
 package com.mockinterview.resume.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mockinterview.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,9 +24,13 @@ public class Resume {
 
     private String filePath;
 
+    @Column(columnDefinition = "TEXT")
+    private String resumeText; // Extracted text content from the resume file
+
     private LocalDateTime uploadedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore  // Prevents circular reference with User
     private User user;
 }

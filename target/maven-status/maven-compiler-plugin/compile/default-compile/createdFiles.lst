@@ -7,8 +7,11 @@ com\mockinterview\interview\entity\Answer$AnswerBuilder.class
 com\mockinterview\MockInterviewApplication.class
 com\mockinterview\interview\repository\InterviewRepository.class
 com\mockinterview\interview\controller\StartInterviewRequest.class
+com\mockinterview\interview\repository\AnswerRepository.class
+com\mockinterview\resume\service\ResumeParserService.class
 com\mockinterview\resume\service\ResumeService.class
 com\mockinterview\exception\CustomExceptions$InterviewNotFoundException.class
+com\mockinterview\interview\repository\QuestionRepository.class
 com\mockinterview\config\OpenAIConfig.class
 com\mockinterview\config\SecurityConfig.class
 com\mockinterview\controller\HealthController$HealthResponse.class

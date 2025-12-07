@@ -1,5 +1,7 @@
 package com.mockinterview.interview.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.mockinterview.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,8 +32,10 @@ public class Interview {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore  // Prevents circular reference with User
     private User user;
 
     @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL)
+    @JsonManagedReference  // Manages the parent side of the relationship
     private List<Question> questions;
 }

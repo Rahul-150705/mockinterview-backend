@@ -41,4 +41,9 @@ public class AuthService {
 
         return jwtConfig.generateToken(user.getEmail());
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new CustomExceptions.InvalidCredentialsException("User not found"));
+    }
 }
