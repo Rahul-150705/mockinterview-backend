@@ -114,7 +114,7 @@ public class InterviewService {
                 .question(question)
                 .userAnswer(userAnswer)
                 .aiFeedback(feedback)
-                .score((int) score)
+                .score(score)
                 .build();
 
         // Save answer

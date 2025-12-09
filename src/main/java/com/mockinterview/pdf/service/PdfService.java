@@ -1,6 +1,5 @@
 package com.mockinterview.pdf.service;
 
-import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -21,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class PdfService {
 
-    private static final DeviceRgb PRIMARY_COLOR = new DeviceRgb(99, 102, 241); // Primary color from your design
+    private static final DeviceRgb PRIMARY_COLOR = new DeviceRgb(99, 102, 241);
     private static final DeviceRgb LIGHT_GRAY = new DeviceRgb(243, 244, 246);
     private static final DeviceRgb DARK_GRAY = new DeviceRgb(107, 114, 128);
 
@@ -31,19 +30,10 @@ public class PdfService {
             PdfDocument pdfDoc = new PdfDocument(writer);
             Document document = new Document(pdfDoc);
 
-            // Add header
             addHeader(document, interview);
-            
-            // Add interview details
             addInterviewDetails(document, interview);
-            
-            // Add questions and answers
             addQuestionsAndAnswers(document, interview);
-            
-            // Add summary
             addSummary(document, interview);
-            
-            // Add footer
             addFooter(document);
 
             document.close();
@@ -54,7 +44,6 @@ public class PdfService {
     }
 
     private void addHeader(Document document, Interview interview) {
-        // Title
         Paragraph title = new Paragraph("Interview Report")
                 .setFontSize(28)
                 .setBold()
@@ -63,7 +52,6 @@ public class PdfService {
                 .setMarginBottom(10);
         document.add(title);
 
-        // Subtitle
         Paragraph subtitle = new Paragraph(interview.getJobTitle())
                 .setFontSize(18)
                 .setFontColor(DARK_GRAY)
@@ -74,13 +62,11 @@ public class PdfService {
 
     private void addInterviewDetails(Document document, Interview interview) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
-        
-        // Create details table
+
         Table detailsTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
                 .setWidth(UnitValue.createPercentValue(100))
                 .setMarginBottom(20);
 
-        // Add rows
         addDetailRow(detailsTable, "Job Title:", interview.getJobTitle());
         addDetailRow(detailsTable, "Started At:", interview.getStartedAt().format(formatter));
         if (interview.getFinishedAt() != null) {
@@ -98,7 +84,7 @@ public class PdfService {
                 .setBackgroundColor(LIGHT_GRAY)
                 .setBorder(null)
                 .setPadding(8));
-        
+
         table.addCell(new Cell()
                 .add(new Paragraph(value))
                 .setBorder(null)
@@ -115,7 +101,7 @@ public class PdfService {
 
         int questionNumber = 1;
         for (Question question : interview.getQuestions()) {
-            // Question header
+
             Paragraph questionHeader = new Paragraph("Question " + questionNumber)
                     .setFontSize(14)
                     .setBold()
@@ -123,23 +109,20 @@ public class PdfService {
                     .setMarginTop(15);
             document.add(questionHeader);
 
-            // Question text
             Paragraph questionText = new Paragraph(question.getQuestionText())
                     .setFontSize(12)
                     .setMarginLeft(10)
                     .setMarginBottom(10);
             document.add(questionText);
 
-            // Answer section
             if (question.getAnswers() != null && !question.getAnswers().isEmpty()) {
-                Answer answer = question.getAnswers().get(0); // Get first answer
+                Answer answer = question.getAnswers().get(0);
 
-                // User's answer
                 document.add(new Paragraph("Your Answer:")
                         .setFontSize(11)
                         .setBold()
                         .setMarginLeft(10));
-                
+
                 document.add(new Paragraph(answer.getUserAnswer())
                         .setFontSize(11)
                         .setMarginLeft(20)
@@ -147,26 +130,25 @@ public class PdfService {
                         .setBackgroundColor(LIGHT_GRAY)
                         .setPadding(10));
 
-                // AI Feedback
                 document.add(new Paragraph("AI Feedback:")
                         .setFontSize(11)
                         .setBold()
                         .setMarginLeft(10));
-                
+
                 document.add(new Paragraph(answer.getAiFeedback())
                         .setFontSize(11)
                         .setMarginLeft(20)
                         .setMarginBottom(10)
                         .setPadding(10));
 
-                // Score
                 DeviceRgb scoreColor = getScoreColor(answer.getScore());
-                document.add(new Paragraph("Score: " + String.format("%.0f", answer.getScore()) + "/100")
+                document.add(new Paragraph("Score: " + formatScore(answer.getScore()) + "/100")
                         .setFontSize(12)
                         .setBold()
                         .setFontColor(scoreColor)
                         .setMarginLeft(10)
                         .setMarginBottom(15));
+
             } else {
                 document.add(new Paragraph("Not answered")
                         .setFontSize(11)
@@ -188,10 +170,9 @@ public class PdfService {
                 .setMarginTop(30)
                 .setMarginBottom(15));
 
-        // Calculate overall score
         double totalScore = 0;
         int answeredQuestions = 0;
-        
+
         for (Question question : interview.getQuestions()) {
             if (question.getAnswers() != null && !question.getAnswers().isEmpty()) {
                 totalScore += question.getAnswers().get(0).getScore();
@@ -201,7 +182,6 @@ public class PdfService {
 
         double overallScore = answeredQuestions > 0 ? totalScore / answeredQuestions : 0;
 
-        // Summary table
         Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
                 .setWidth(UnitValue.createPercentValue(100));
 
@@ -210,7 +190,7 @@ public class PdfService {
                 .setBackgroundColor(LIGHT_GRAY)
                 .setBorder(null)
                 .setPadding(10));
-        
+
         summaryTable.addCell(new Cell()
                 .add(new Paragraph(answeredQuestions + " / " + interview.getQuestions().size()))
                 .setBorder(null)
@@ -221,9 +201,9 @@ public class PdfService {
                 .setBackgroundColor(LIGHT_GRAY)
                 .setBorder(null)
                 .setPadding(10));
-        
+
         summaryTable.addCell(new Cell()
-                .add(new Paragraph(String.format("%.0f/100", overallScore))
+                .add(new Paragraph(formatScore(overallScore) + "/100")
                         .setFontColor(getScoreColor(overallScore)))
                 .setBorder(null)
                 .setPadding(10));
@@ -239,13 +219,18 @@ public class PdfService {
                 .setMarginTop(30));
     }
 
-    private DeviceRgb getScoreColor(double score) {
-        if (score >= 80) {
-            return new DeviceRgb(34, 197, 94); // Success green
-        } else if (score >= 60) {
-            return new DeviceRgb(251, 146, 60); // Warning orange
-        } else {
-            return new DeviceRgb(239, 68, 68); // Destructive red
+        private DeviceRgb getScoreColor(double overallScore) {
+                if (overallScore >= 80) {
+                        return new DeviceRgb(34, 197, 94);
+                } else if (overallScore >= 60) {
+                        return new DeviceRgb(251, 146, 60);
+                } else {
+                        return new DeviceRgb(239, 68, 68);
+                }
         }
+
+    // ⭐ NEW METHOD for formatting scores to 2 digits
+    private String formatScore(double score) {
+        return String.format("%02d", (int) Math.round(score));
     }
 }

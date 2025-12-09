@@ -20,7 +20,7 @@ public class Answer {
 
     private String aiFeedback;
 
-    private int score;
+    private double score;
 
     @ManyToOne
     @JoinColumn(name = "question_id")
