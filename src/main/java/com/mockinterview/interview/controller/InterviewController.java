@@ -38,6 +38,7 @@ public class InterviewController {
 
         try {
             System.out.println("Starting interview for job: " + request.getJobTitle());
+            System.out.println("Interview round: " + request.getRoundType());
             
             // Get user - for development, use first user if not specified
             User user;
@@ -55,7 +56,8 @@ public class InterviewController {
 
             String[] questions = aiService.generateQuestions(
                 request.getJobTitle(), 
-                request.getJobDescription()
+                request.getJobDescription(),
+                request.getRoundType()
             );
 
             Interview interview = interviewService.startInterview(
@@ -125,57 +127,56 @@ public class InterviewController {
     }
 
     @GetMapping("/{interviewId}/download-pdf")
-public ResponseEntity<?> downloadInterviewPdf(
-    
-        @PathVariable Long interviewId,
-        @RequestParam(value = "userId", required = false) Long userId) {
-    
-    try {
-        System.out.println("Generating PDF for interview: " + interviewId);
+    public ResponseEntity<?> downloadInterviewPdf(
+            @PathVariable Long interviewId,
+            @RequestParam(value = "userId", required = false) Long userId) {
         
-        // Get user - for development, use first user if not specified
-        User user;
-        if (userId != null) {
-            user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-        } else {
-            List<User> users = userRepository.findAll();
-            if (users.isEmpty()) {
-                throw new RuntimeException("No users in database.");
+        try {
+            System.out.println("Generating PDF for interview: " + interviewId);
+            
+            // Get user - for development, use first user if not specified
+            User user;
+            if (userId != null) {
+                user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            } else {
+                List<User> users = userRepository.findAll();
+                if (users.isEmpty()) {
+                    throw new RuntimeException("No users in database.");
+                }
+                user = users.get(0);
             }
-            user = users.get(0);
+            
+            // Get interview and verify ownership
+            Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new RuntimeException("Interview not found with ID: " + interviewId));
+            
+            if (!interview.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException("Unauthorized: This interview belongs to another user");
+            }
+            
+            // Generate PDF
+            byte[] pdfBytes = pdfService.generateInterviewPdf(interview);
+            
+            // Generate filename
+            String filename = "Interview_" + interview.getJobTitle().replaceAll("[^a-zA-Z0-9]", "_") 
+                            + "_" + interview.getId() + ".pdf";
+            
+            System.out.println("PDF generated successfully: " + filename);
+            
+            // Return PDF as downloadable file
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .body(pdfBytes);
+                    
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
-        
-        // Get interview and verify ownership
-        Interview interview = interviewRepository.findById(interviewId)
-            .orElseThrow(() -> new RuntimeException("Interview not found with ID: " + interviewId));
-        
-        if (!interview.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized: This interview belongs to another user");
-        }
-        
-        // Generate PDF
-        byte[] pdfBytes = pdfService.generateInterviewPdf(interview);
-        
-        // Generate filename
-        String filename = "Interview_" + interview.getJobTitle().replaceAll("[^a-zA-Z0-9]", "_") 
-                        + "_" + interview.getId() + ".pdf";
-        
-        System.out.println("PDF generated successfully: " + filename);
-        
-        // Return PDF as downloadable file
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(pdfBytes);
-                
-    } catch (Exception e) {
-        e.printStackTrace();
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error", e.getMessage());
-        return ResponseEntity.badRequest().body(errorResponse);
     }
-}
 
     @GetMapping("/history")
     public ResponseEntity<?> getUserInterviews(
@@ -236,6 +237,7 @@ public ResponseEntity<?> downloadInterviewPdf(
 class StartInterviewRequest {
     private String jobTitle;
     private String jobDescription;
+    private String roundType; // BEHAVIORAL, CODING, DSA, SYSTEM_DESIGN
 }
 
 @Data

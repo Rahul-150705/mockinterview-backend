@@ -1,4 +1,3 @@
-com\mockinterview\interview\controller\AnswerRequest.class
 com\mockinterview\exception\CustomExceptions.class
 com\mockinterview\interview\entity\Answer.class
 com\mockinterview\interview\entity\Interview$InterviewBuilder.class
@@ -6,7 +5,6 @@ com\mockinterview\exception\CustomExceptions$QuestionNotFoundException.class
 com\mockinterview\interview\entity\Answer$AnswerBuilder.class
 com\mockinterview\MockInterviewApplication.class
 com\mockinterview\interview\repository\InterviewRepository.class
-com\mockinterview\interview\controller\StartInterviewRequest.class
 com\mockinterview\interview\repository\AnswerRepository.class
 com\mockinterview\resume\service\ResumeParserService.class
 com\mockinterview\resume\service\ResumeService.class
@@ -16,7 +14,6 @@ com\mockinterview\config\OpenAIConfig.class
 com\mockinterview\config\SecurityConfig.class
 com\mockinterview\controller\HealthController$HealthResponse.class
 com\mockinterview\config\JwtConfig.class
-com\mockinterview\interview\controller\InterviewController.class
 com\mockinterview\auth\service\AuthService.class
 com\mockinterview\ai\service\AIService.class
 com\mockinterview\resume\controller\ResumeController.class
@@ -30,7 +27,6 @@ com\mockinterview\interview\entity\Question.class
 com\mockinterview\interview\entity\Question$QuestionBuilder.class
 com\mockinterview\resume\entity\Resume.class
 com\mockinterview\user\repository\UserRepository.class
-com\mockinterview\interview\service\InterviewService.class
 com\mockinterview\controller\HealthController.class
 com\mockinterview\user\entity\User.class
 com\mockinterview\interview\entity\Interview.class

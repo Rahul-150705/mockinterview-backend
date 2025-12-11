@@ -20,37 +20,18 @@ public class AIService {
     private final OpenAIConfig openAIConfig;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String[] generateQuestions(String jobTitle, String jobDescription, String resumeText) {
+    public String[] generateQuestions(String jobTitle, String jobDescription, String roundType) {
         try {
             String apiKey = openAIConfig.getApiKey();
             
             // Check if API key is configured
             if (apiKey == null || apiKey.isEmpty() || apiKey.startsWith("sk-your")) {
                 System.out.println("OpenAI API key not configured, using placeholder questions");
-                return getPlaceholderQuestions(jobTitle);
+                return getPlaceholderQuestionsByRound(jobTitle, roundType);
             }
 
-            // Build prompt with resume if available
-            StringBuilder promptBuilder = new StringBuilder();
-            promptBuilder.append(String.format(
-                "Generate 5 technical interview questions for a %s position. " +
-                "Job Description: %s\n\n",
-                jobTitle, jobDescription
-            ));
-            
-            if (resumeText != null && !resumeText.trim().isEmpty()) {
-                // Add resume context (truncate if too long)
-                String resumeSummary = resumeText.length() > 2000 
-                    ? resumeText.substring(0, 2000) + "..." 
-                    : resumeText;
-                promptBuilder.append("Candidate's Resume:\n")
-                    .append(resumeSummary)
-                    .append("\n\n");
-                promptBuilder.append("Generate questions that are relevant to both the job description AND the candidate's background.\n\n");
-            }
-            
-            promptBuilder.append("Return only the questions, one per line, numbered 1-5.");
-            String prompt = promptBuilder.toString();
+            // Build prompt based on round type
+            String prompt = buildPromptForRound(jobTitle, jobDescription, roundType);
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-3.5-turbo");
@@ -90,18 +71,125 @@ public class AIService {
             }
 
             System.out.println("Failed to parse OpenAI response, using placeholder questions");
-            return getPlaceholderQuestions(jobTitle);
+            return getPlaceholderQuestionsByRound(jobTitle, roundType);
 
         } catch (Exception e) {
             System.err.println("Error calling OpenAI API: " + e.getMessage());
             e.printStackTrace();
-            return getPlaceholderQuestions(jobTitle);
+            return getPlaceholderQuestionsByRound(jobTitle, roundType);
         }
     }
     
     // Overload for backward compatibility
     public String[] generateQuestions(String jobTitle, String jobDescription) {
-        return generateQuestions(jobTitle, jobDescription, null);
+        return generateQuestions(jobTitle, jobDescription, "GENERAL");
+    }
+
+    private String buildPromptForRound(String jobTitle, String jobDescription, String roundType) {
+        StringBuilder promptBuilder = new StringBuilder();
+        
+        switch (roundType != null ? roundType.toUpperCase() : "GENERAL") {
+            case "BEHAVIORAL":
+                promptBuilder.append(String.format(
+                    "Generate 5 behavioral interview questions for a %s position. " +
+                    "Focus on: leadership, teamwork, conflict resolution, problem-solving, and past experiences. " +
+                    "Job Description: %s\n\n" +
+                    "Return only the questions, one per line, numbered 1-5.",
+                    jobTitle, jobDescription
+                ));
+                break;
+                
+            case "CODING":
+                promptBuilder.append(String.format(
+                    "Generate 5 coding interview questions for a %s position. " +
+                    "Include practical coding problems, algorithm implementation, and code review scenarios. " +
+                    "Job Description: %s\n\n" +
+                    "Return only the questions, one per line, numbered 1-5.",
+                    jobTitle, jobDescription
+                ));
+                break;
+                
+            case "DSA":
+                promptBuilder.append(String.format(
+                    "Generate 5 Data Structures and Algorithms questions for a %s position. " +
+                    "Focus on: arrays, linked lists, trees, graphs, sorting, searching, and complexity analysis. " +
+                    "Job Description: %s\n\n" +
+                    "Return only the questions, one per line, numbered 1-5.",
+                    jobTitle, jobDescription
+                ));
+                break;
+                
+            case "SYSTEM_DESIGN":
+                promptBuilder.append(String.format(
+                    "Generate 5 system design interview questions for a %s position. " +
+                    "Focus on: scalability, architecture, databases, microservices, and distributed systems. " +
+                    "Job Description: %s\n\n" +
+                    "Return only the questions, one per line, numbered 1-5.",
+                    jobTitle, jobDescription
+                ));
+                break;
+                
+            default:
+                promptBuilder.append(String.format(
+                    "Generate 5 technical interview questions for a %s position. " +
+                    "Job Description: %s\n\n" +
+                    "Return only the questions, one per line, numbered 1-5.",
+                    jobTitle, jobDescription
+                ));
+        }
+        
+        return promptBuilder.toString();
+    }
+
+    private String[] getPlaceholderQuestionsByRound(String jobTitle, String roundType) {
+        if (roundType == null) roundType = "GENERAL";
+        
+        switch (roundType.toUpperCase()) {
+            case "BEHAVIORAL":
+                return new String[]{
+                    "Tell me about a time when you had to work with a difficult team member. How did you handle it?",
+                    "Describe a situation where you had to meet a tight deadline. What was your approach?",
+                    "Give me an example of a project where you showed leadership skills.",
+                    "Tell me about a time when you failed. What did you learn from it?",
+                    "Describe a situation where you had to resolve a conflict within your team."
+                };
+                
+            case "CODING":
+                return new String[]{
+                    "Write a function to reverse a string without using built-in reverse methods.",
+                    "Implement a function to check if a string is a palindrome.",
+                    "Write code to find the first non-repeating character in a string.",
+                    "Implement a function to merge two sorted arrays.",
+                    "Write a function to detect if a linked list has a cycle."
+                };
+                
+            case "DSA":
+                return new String[]{
+                    "Explain the difference between a stack and a queue. When would you use each?",
+                    "Describe how a hash table works and discuss its time complexity for insertion and lookup.",
+                    "What is the time complexity of QuickSort? Explain how the algorithm works.",
+                    "Implement a binary search algorithm and explain its time complexity.",
+                    "Explain how depth-first search (DFS) and breadth-first search (BFS) differ."
+                };
+                
+            case "SYSTEM_DESIGN":
+                return new String[]{
+                    "Design a URL shortening service like bit.ly. Discuss scalability and data storage.",
+                    "How would you design a distributed cache system?",
+                    "Design the architecture for a real-time chat application that supports millions of users.",
+                    "Explain how you would design a rate limiter for an API.",
+                    "Design a notification system that can handle millions of push notifications per day."
+                };
+                
+            default:
+                return new String[]{
+                    "Tell me about your experience with " + jobTitle + " technologies.",
+                    "What is your approach to solving complex problems?",
+                    "Describe a challenging project you've worked on.",
+                    "How do you stay updated with the latest technologies?",
+                    "What are your strengths and weaknesses as a developer?"
+                };
+        }
     }
 
     public String getFeedback(String question, String userAnswer) {
@@ -168,16 +256,6 @@ public class AIService {
             return 50.0 + (Math.random() * 25); // 50-75
         }
         return 70.0 + (Math.random() * 20); // 70-90 default
-    }
-
-    private String[] getPlaceholderQuestions(String jobTitle) {
-        return new String[]{
-            "Tell me about your experience with " + jobTitle + " technologies.",
-            "What is your approach to solving complex problems?",
-            "Describe a challenging project you've worked on.",
-            "How do you stay updated with the latest technologies?",
-            "What are your strengths and weaknesses as a developer?"
-        };
     }
 
     private String getPlaceholderFeedback() {
