@@ -1,6 +1,6 @@
 package com.mockinterview.compiler.controller;
 
-import com.mockinterview.compiler.service.JudgeApiService;
+import com.mockinterview.compiler.service.CodapiService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class CompilerController {
 
-    private final JudgeApiService judgeApiService;
+    private final CodapiService codapiService;
 
     @PostMapping("/execute")
     public ResponseEntity<?> executeCode(@RequestBody CodeExecutionRequest request) {
@@ -37,7 +37,7 @@ public class CompilerController {
 
             String stdin = request.getStdin() != null ? request.getStdin() : "";
             
-            Map<String, Object> result = judgeApiService.executeCode(
+            Map<String, Object> result = codapiService.executeCode(
                 request.getSourceCode(),
                 request.getLanguage(),
                 stdin
@@ -57,7 +57,7 @@ public class CompilerController {
     @GetMapping("/languages")
     public ResponseEntity<?> getSupportedLanguages() {
         try {
-            List<String> languages = judgeApiService.getSupportedLanguages();
+            List<String> languages = codapiService.getSupportedLanguages();
             
             Map<String, Object> response = new HashMap<>();
             response.put("languages", languages);
@@ -93,7 +93,7 @@ public class CompilerController {
             int passedCount = 0;
 
             for (TestCase testCase : request.getTestCases()) {
-                Map<String, Object> result = judgeApiService.executeCode(
+                Map<String, Object> result = codapiService.executeCode(
                     request.getSourceCode(),
                     request.getLanguage(),
                     testCase.getInput()
@@ -115,10 +115,13 @@ public class CompilerController {
                 testResult.put("passed", passed);
                 testResult.put("status", result.get("status"));
                 testResult.put("time", result.get("time"));
-                testResult.put("memory", result.get("memory"));
                 
                 if (result.containsKey("stderr")) {
                     testResult.put("stderr", result.get("stderr"));
+                }
+                
+                if (result.containsKey("error")) {
+                    testResult.put("error", result.get("error"));
                 }
                 
                 results.add(testResult);
