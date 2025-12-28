@@ -19,58 +19,35 @@ public class CompilerController {
     private final CodapiService codapiService;
 
     @PostMapping("/execute")
-    public ResponseEntity<?> executeCode(@RequestBody CodeExecutionRequest request) {
-        try {
-            System.out.println("Executing code in language: " + request.getLanguage());
-            
-            if (request.getSourceCode() == null || request.getSourceCode().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                    Map.of("error", "Source code is required")
-                );
-            }
-
-            if (request.getLanguage() == null || request.getLanguage().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                    Map.of("error", "Language is required")
-                );
-            }
-
-            String stdin = request.getStdin() != null ? request.getStdin() : "";
-            
-            Map<String, Object> result = codapiService.executeCode(
-                request.getSourceCode(),
-                request.getLanguage(),
-                stdin
+public ResponseEntity<?> executeCode(@RequestBody CodeExecutionRequest request) {
+    try {
+        System.out.println("Executing code in language: " + request.getLanguage());
+        System.out.println("Stdin received: [" + request.getStdin() + "]"); // Debug log
+        
+        if (request.getSourceCode() == null || request.getSourceCode().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", "Source code is required")
             );
-
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", "Execution failed: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
         }
-    }
 
-    @GetMapping("/languages")
-    public ResponseEntity<?> getSupportedLanguages() {
-        try {
-            List<String> languages = codapiService.getSupportedLanguages();
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("languages", languages);
-            response.put("count", languages.size());
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Failed to get languages: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
+        String stdin = request.getStdin() != null ? request.getStdin() : "";
+        
+        Map<String, Object> result = codapiService.executeCode(
+            request.getSourceCode(),
+            request.getLanguage(),
+            stdin
+        );
+
+        return ResponseEntity.ok(result);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("error", "Execution failed: " + e.getMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
     }
+}
 
     @PostMapping("/test")
     public ResponseEntity<?> testCode(@RequestBody CodeTestRequest request) {

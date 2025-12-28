@@ -263,4 +263,56 @@ public class AIService {
                "Consider providing more specific examples to strengthen your response. " +
                "Overall, this is a solid answer that covers the main points.";
     }
+    public String getChatResponse(String userMessage) {
+    try {
+        String apiKey = openAIConfig.getApiKey();
+        
+        if (apiKey == null || apiKey.isEmpty() || apiKey.startsWith("sk-your")) {
+            throw new RuntimeException("OpenAI API key not configured");
+        }
+
+        String prompt = String.format(
+            "You are a helpful interview assistant. " +
+            "Respond to the candidate's message in a friendly and professional manner. " +
+            "Keep your response concise (2-3 sentences). " +
+            "Message: %s",
+            userMessage
+        );
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", "gpt-3.5-turbo");
+        requestBody.put("messages", List.of(
+            Map.of("role", "user", "content", prompt)
+        ));
+        requestBody.put("max_tokens", 150);
+        requestBody.put("temperature", 0.7);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+            "https://api.openai.com/v1/chat/completions",
+            request,
+            Map.class
+        );
+
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("choices")) {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            if (!choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                return (String) message.get("content");
+            }
+        }
+
+        throw new RuntimeException("No response from OpenAI");
+
+    } catch (Exception e) {
+        System.err.println("Error getting chat response from OpenAI: " + e.getMessage());
+        throw e;
+    }
+}
 }
